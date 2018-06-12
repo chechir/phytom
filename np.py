@@ -58,12 +58,70 @@ def is_datetime(v):
     return 'datetime' in str(v.dtype)
 
 
-def group_apply(values, group_ids, func):
+def simple_group_apply(values, group_ids, func):
     output = np.repeat(np.nan, len(values))
     ixs = get_group_ixs(group_ids)
     for ix in ixs.values():
         output[ix] = func(values[ix])
     return output
+
+
+def group_apply(values, group_ids, func, multiarg=False, strout=False):
+    if group_ids.ndim == 2:
+        group_ids = add_as_strings(*[group_ids[:, i] for i in range(group_ids.shape[1])], sep='_')
+
+    ix = np.argsort(group_ids, kind='mergesort')
+    sids = group_ids[ix]
+    cuts = sids[1:] != sids[:-1]
+    reverse = invert_argsort(ix)
+    values = values[ix]
+
+    if strout:
+        nvalues = np.prod(values.shape)
+        res = np.array([None]*nvalues).reshape(values.shape)
+    elif multiarg:
+        res = np.nan * np.zeros(len(values))
+    else:
+        res = np.nan * np.zeros(values.shape)
+
+    prevcut = 0
+    for cut in np.where(cuts)[0]+1:
+        if multiarg:
+            res[prevcut:cut] = func(*values[prevcut:cut].T)
+        else:
+            res[prevcut:cut] = func(values[prevcut:cut])
+        prevcut = cut
+    if multiarg:
+        res[prevcut:] = func(*values[prevcut:].T)
+    else:
+        res[prevcut:] = func(values[prevcut:])
+    revd = res[reverse]
+    return revd
+
+
+def invert_argsort(argsort_ix):
+    reverse = np.repeat(0, len(argsort_ix))
+    reverse[argsort_ix] = np.arange(len(argsort_ix))
+    return reverse
+
+
+def add_as_strings(*args, **kwargs):
+    result = args[0].astype(str)
+    sep = kwargs.get('sep')
+    if sep:
+        seperator = np.repeat(sep, len(result))
+    else:
+        seperator = None
+
+    for arr in args[1:]:
+        if seperator is not None:
+            result = _add_strings(result, seperator)
+        result = _add_strings(result, arr.astype(str))
+    return result
+
+
+def _add_strings(v, w):
+    return np.core.defchararray.add(v, w)
 
 
 def get_group_ixs(*group_ids, **kwargs):
@@ -215,6 +273,19 @@ def lag(v, init, shift=1):
 
 def lagged_cumsum(v, init):
     return lag(np.cumsum(v, axis=0), init)
+
+
+def rank(array):
+    """ Returns rank of element in an array, with greatest value having the greatest rank. Repeated values get different ranks.
+
+    Examples:
+        [-10, 3, 0, 0] ==> [0, 3, 1, 2]
+        [10, 7, 6] ==> [2, 1, 0]
+    """
+    temp = array.argsort()
+    ranks = np.empty(len(array), int)
+    ranks[temp] = np.arange(len(array))
+    return ranks
 
 
 def rolling_mean(v, window):
