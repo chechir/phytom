@@ -1,4 +1,7 @@
 import numpy as np
+import pandas as pd
+import numexpr
+import copy
 from collections import defaultdict, OrderedDict
 
 
@@ -118,12 +121,72 @@ def get_ordered_group_ixs(group_ids):
     return od_ixs
 
 
+def get_unique_values_in_order(values):
+    return list(OrderedDict.fromkeys(values))
+
+
+def change_flag(arr, init=0):
+    """ [1,1,2,3,1] --> [init, 0, 1, 1, 1] """
+    values = np.repeat(None, len(arr))
+    values[0] = 0
+    values[1:] = (arr[1:] != arr[:-1]).astype(int)
+    return values
+
+
+def get_new_value_flags(values):
+    """ Goes through the values and flags unique values it has not seen before.
+    Example:
+        values = [A, B, C, A, A, D] --> [True, True, True, False, False, True]
+    """
+    _, indices = np.unique(values, return_index=True)
+    flags = np.zeros(len(values))
+    flags[indices] = 1
+    return flags.astype(bool)
+
+
+def is_npdatetime(v):
+    try:
+        answer = 'datetime' in v.dtype.name
+    except:
+        answer = False
+    return answer
+
 def nan_allclose(x,y):
     nan_ix_x = np.isnan(x)
     nan_ix_y = np.isnan(y)
     is_close = np.isclose(x,y)
     nan_close = (is_close | (nan_ix_x & nan_ix_y))
     return np.all(nan_close)
+
+
+def replace(values, mapping_dict):
+    values = copy.deepcopy(values)
+    for k in mapping_dict:
+        ix = nan_equality(values, k)
+        values[ix] = mapping_dict[k]
+    return values
+
+
+def nan_equality(ax, bx):
+    """ Compares two arrays, nans are equal. """
+    if not isinstance(ax, np.ndarray) and not isinstance(ax, list):
+        ax = np.array([ax])
+    if not isinstance(bx, np.ndarray) and not isinstance(bx, list):
+        bx = np.array([bx])
+    if not isinstance(ax, np.ndarray):
+        ax = np.array(ax)
+    if not isinstance(bx, np.ndarray):
+        bx = np.array(bx)
+    if type(ax) in [pd.DataFrame, pd.Series]:
+        ax = ax.values
+    if type(bx) in [pd.DataFrame, pd.Series]:
+        bx = bx.values
+    if ax.dtype.kind in ['U', 'O'] or bx.dtype.kind in ['U', 'O']:
+        # if one is a S then both must be S
+        ax = ax.astype('S')
+        bx = bx.astype('S')
+    are_equal = numexpr.evaluate('(ax==bx)|((ax!=ax)&(bx!=bx))')
+    return are_equal
 
 
 def ffill(values):
@@ -138,6 +201,11 @@ def ffill(values):
     return out
 
 
+def is_null(*args, **kwargs):
+    return pd.isnull(*args, **kwargs)
+isnull = is_null
+
+
 def lag(v, init, shift=1):
     w = np.nan * v
     w[0:shift] = init
@@ -147,3 +215,78 @@ def lag(v, init, shift=1):
 
 def lagged_cumsum(v, init):
     return lag(np.cumsum(v, axis=0), init)
+
+
+def rolling_mean(v, window):
+    out = np.nan * v
+    cumsums = np.cumsum(v)
+    length = len(v)
+    if length <= window:
+        out = 1. * cumsums / (np.arange(length) + 1)
+    else:
+        out[:window] = 1. * cumsums[:window] / (np.arange(window) + 1)
+        out[window:] = (cumsums[window:] - cumsums[:length - window])/window
+    return out
+
+
+def get_rolling_std(v, window):
+    rolling_means = rolling_mean(v, window)
+    deviation = (v - rolling_means)**2
+    cum_deviation = np.cumsum(deviation)
+    diff = cum_deviation[window:] - cum_deviation[:-window]
+    mean_diff = diff / window
+    for i in xrange(min(window,len(v))):
+        mean_diff = np.insert(mean_diff, i, cum_deviation[i]/(i+1))
+    return np.sqrt(mean_diff)
+
+def get_rolling_sharpe(v, window):
+    rolling_means = rolling_mean(v, window)
+    rolling_std = get_rolling_std(v, window)
+    return rolling_means/rolling_std
+
+
+# Losses
+def bin_ent(flags, predictions):
+    assert flags.shape == predictions.shape
+    losses = -(flags * np.log(predictions) + (1.0-flags) * np.log(1.0-predictions))
+    return losses
+
+
+def mean_bin_ent(flags, predictions):
+    return bin_ent(flags, predictions).mean()
+
+
+def sq_loss(targets, predictions):
+    assert targets.shape == predictions.shape
+    losses = (predictions - targets)**2
+    return losses
+
+
+def mean_sq_loss(targets, predictions):
+    return sq_loss(targets, predictions).mean()
+
+
+def abs_loss(targets, predictions):
+    assert targets.shape == predictions.shape
+    losses = np.abs(predictions - targets)
+    return losses
+
+
+def mean_abs_loss(targets, predictions):
+    return abs_loss(targets, predictions).mean()
+
+
+def x_ent(flags, predictions):
+    _check_x_ent_inputs(predictions, flags)
+    losses = -flags * np.log(predictions)
+    return losses
+
+
+def mean_x_ent(flags, predictions):
+    return x_ent(flags, predictions).mean()
+
+
+def _check_x_ent_inputs(predictions, flags):
+    sum_preds = np.sum(predictions, axis=1)
+    assert np.all(np.isclose(sum_preds, 1.0)), 'Predictions do not sum to one in probability space'
+    assert sorted(np.unique(flags)) == [0.0, 1.0]
