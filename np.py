@@ -361,3 +361,8 @@ def _check_x_ent_inputs(predictions, flags):
     sum_preds = np.sum(predictions, axis=1)
     assert np.all(np.isclose(sum_preds, 1.0)), 'Predictions do not sum to one in probability space'
     assert sorted(np.unique(flags)) == [0.0, 1.0]
+
+
+flatten = lambda l: [item for sublist in l for item in sublist]
+
+ensure_is_list = lambda obj: obj if isinstance(obj, list) else [obj]

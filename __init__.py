@@ -4,4 +4,6 @@ from . import (
         paths,
         features,
         models,
+        strings,
+        dates
         )
