@@ -1,4 +1,5 @@
 import numpy as np
+from collections import defaultdict, OrderedDict
 
 
 def fillna(array, na_value):
@@ -52,6 +53,14 @@ def is_nptimedelta(v):
 
 def is_datetime(v):
     return 'datetime' in str(v.dtype)
+
+
+def group_apply(values, group_ids, func):
+    output = np.repeat(np.nan, len(values))
+    ixs = get_group_ixs(group_ids)
+    for ix in ixs.values():
+        output[ix] = func(values[ix])
+    return output
 
 
 def get_group_ixs(*group_ids, **kwargs):
@@ -127,3 +136,14 @@ def ffill(values):
     out = values[np.arange(idx.shape[0])[:,None], idx]
     out = out.squeeze()
     return out
+
+
+def lag(v, init, shift=1):
+    w = np.nan * v
+    w[0:shift] = init
+    w[shift:] = v[:-shift]
+    return w
+
+
+def lagged_cumsum(v, init):
+    return lag(np.cumsum(v, axis=0), init)
