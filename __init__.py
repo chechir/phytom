@@ -1,5 +1,5 @@
 from . import (
-        io,
+        inout,
         np,
         paths,
         features,

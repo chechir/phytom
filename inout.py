@@ -5,8 +5,6 @@ import json
 import optparse
 import os
 import sys
-import tempfile
-import numpy as np
 
 
 def append_csv(data, path):
