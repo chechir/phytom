@@ -16,8 +16,9 @@ def fillna(array, na_value):
 
 
 def get_str_columns(df):
-    str_columns = [col for col in df.columns
-                   if not np.issubdtype(df[col].dtype, np.number)]
+    str_columns = [
+        col for col in df.columns if not np.issubdtype(df[col].dtype, np.number)
+    ]
     return str_columns
 
 
@@ -48,14 +49,14 @@ def concatenate(data, fillna=None):
 
 def is_nptimedelta(v):
     try:
-        answer = 'timedelta' in v.dtype.name
+        answer = "timedelta" in v.dtype.name
     except:
         answer = False
     return answer
 
 
 def is_datetime(v):
-    return 'datetime' in str(v.dtype)
+    return "datetime" in str(v.dtype)
 
 
 def simple_group_apply(values, group_ids, func):
@@ -68,9 +69,11 @@ def simple_group_apply(values, group_ids, func):
 
 def group_apply(values, group_ids, func, multiarg=False, strout=False):
     if group_ids.ndim == 2:
-        group_ids = add_as_strings(*[group_ids[:, i] for i in range(group_ids.shape[1])], sep='_')
+        group_ids = add_as_strings(
+            *[group_ids[:, i] for i in range(group_ids.shape[1])], sep="_"
+        )
 
-    ix = np.argsort(group_ids, kind='mergesort')
+    ix = np.argsort(group_ids, kind="mergesort")
     sids = group_ids[ix]
     cuts = sids[1:] != sids[:-1]
     reverse = invert_argsort(ix)
@@ -78,14 +81,14 @@ def group_apply(values, group_ids, func, multiarg=False, strout=False):
 
     if strout:
         nvalues = np.prod(values.shape)
-        res = np.array([None]*nvalues).reshape(values.shape)
+        res = np.array([None] * nvalues).reshape(values.shape)
     elif multiarg:
         res = np.nan * np.zeros(len(values))
     else:
         res = np.nan * np.zeros(values.shape)
 
     prevcut = 0
-    for cut in np.where(cuts)[0]+1:
+    for cut in np.where(cuts)[0] + 1:
         if multiarg:
             res[prevcut:cut] = func(*values[prevcut:cut].T)
         else:
@@ -107,7 +110,7 @@ def invert_argsort(argsort_ix):
 
 def add_as_strings(*args, **kwargs):
     result = args[0].astype(str)
-    sep = kwargs.get('sep')
+    sep = kwargs.get("sep")
     if sep:
         seperator = np.repeat(sep, len(result))
     else:
@@ -153,7 +156,7 @@ def _ensure_group_ids_hashable(group_ids):
 
 
 def _convert_int_indices_to_bool_indices_if_necessary(ixs, kwargs):
-    bools = kwargs.get('bools', False)
+    bools = kwargs.get("bools", False)
     if bools:
         length = np.sum([len(v) for v in ixs.values()])
         ix_to_bool = lambda v, length: ss.np.ix_to_bool(v, length)
@@ -204,16 +207,17 @@ def get_new_value_flags(values):
 
 def is_npdatetime(v):
     try:
-        answer = 'datetime' in v.dtype.name
+        answer = "datetime" in v.dtype.name
     except:
         answer = False
     return answer
 
-def nan_allclose(x,y):
+
+def nan_allclose(x, y):
     nan_ix_x = np.isnan(x)
     nan_ix_y = np.isnan(y)
-    is_close = np.isclose(x,y)
-    nan_close = (is_close | (nan_ix_x & nan_ix_y))
+    is_close = np.isclose(x, y)
+    nan_close = is_close | (nan_ix_x & nan_ix_y)
     return np.all(nan_close)
 
 
@@ -239,28 +243,30 @@ def nan_equality(ax, bx):
         ax = ax.values
     if type(bx) in [pd.DataFrame, pd.Series]:
         bx = bx.values
-    if ax.dtype.kind in ['U', 'O'] or bx.dtype.kind in ['U', 'O']:
+    if ax.dtype.kind in ["U", "O"] or bx.dtype.kind in ["U", "O"]:
         # if one is a S then both must be S
-        ax = ax.astype('S')
-        bx = bx.astype('S')
-    are_equal = numexpr.evaluate('(ax==bx)|((ax!=ax)&(bx!=bx))')
+        ax = ax.astype("S")
+        bx = bx.astype("S")
+    are_equal = numexpr.evaluate("(ax==bx)|((ax!=ax)&(bx!=bx))")
     return are_equal
 
 
 def ffill(values):
     """ vector only """
-    assert len(values.shape) == 1 or values.shape[1] == 1, 'ffill only works for vector'
+    assert len(values.shape) == 1 or values.shape[1] == 1, "ffill only works for vector"
     values = np.atleast_2d(values)
     mask = is_null(values)
-    idx = np.where(~mask, np.arange(mask.shape[1]),0)
+    idx = np.where(~mask, np.arange(mask.shape[1]), 0)
     idx = np.maximum.accumulate(idx, axis=1, out=idx)
-    out = values[np.arange(idx.shape[0])[:,None], idx]
+    out = values[np.arange(idx.shape[0])[:, None], idx]
     out = out.squeeze()
     return out
 
 
 def is_null(*args, **kwargs):
     return pd.isnull(*args, **kwargs)
+
+
 isnull = is_null
 
 
@@ -296,30 +302,31 @@ def rolling_mean(v, window):
         out = 1. * cumsums / (np.arange(length) + 1)
     else:
         out[:window] = 1. * cumsums[:window] / (np.arange(window) + 1)
-        out[window:] = (cumsums[window:] - cumsums[:length - window])/window
+        out[window:] = (cumsums[window:] - cumsums[: length - window]) / window
     return out
 
 
 def get_rolling_std(v, window):
     rolling_means = rolling_mean(v, window)
-    deviation = (v - rolling_means)**2
+    deviation = (v - rolling_means) ** 2
     cum_deviation = np.cumsum(deviation)
     diff = cum_deviation[window:] - cum_deviation[:-window]
     mean_diff = diff / window
-    for i in xrange(min(window,len(v))):
-        mean_diff = np.insert(mean_diff, i, cum_deviation[i]/(i+1))
+    for i in xrange(min(window, len(v))):
+        mean_diff = np.insert(mean_diff, i, cum_deviation[i] / (i + 1))
     return np.sqrt(mean_diff)
+
 
 def get_rolling_sharpe(v, window):
     rolling_means = rolling_mean(v, window)
     rolling_std = get_rolling_std(v, window)
-    return rolling_means/rolling_std
+    return rolling_means / rolling_std
 
 
 # Losses
 def bin_ent(flags, predictions):
     assert flags.shape == predictions.shape
-    losses = -(flags * np.log(predictions) + (1.0-flags) * np.log(1.0-predictions))
+    losses = -(flags * np.log(predictions) + (1.0 - flags) * np.log(1.0 - predictions))
     return losses
 
 
@@ -329,7 +336,7 @@ def mean_bin_ent(flags, predictions):
 
 def sq_loss(targets, predictions):
     assert targets.shape == predictions.shape
-    losses = (predictions - targets)**2
+    losses = (predictions - targets) ** 2
     return losses
 
 
@@ -359,7 +366,9 @@ def mean_x_ent(flags, predictions):
 
 def _check_x_ent_inputs(predictions, flags):
     sum_preds = np.sum(predictions, axis=1)
-    assert np.all(np.isclose(sum_preds, 1.0)), 'Predictions do not sum to one in probability space'
+    assert np.all(
+        np.isclose(sum_preds, 1.0)
+    ), "Predictions do not sum to one in probability space"
     assert sorted(np.unique(flags)) == [0.0, 1.0]
 
 
