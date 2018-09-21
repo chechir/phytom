@@ -5,14 +5,14 @@ import json
 import optparse
 import os
 import sys
+import pandas as pd
 
 
 def append_csv(data, path):
-    from ddf import DDF
     assert path.endswith('.csv')
-    to_log = data if isinstance(data, DDF) else DDF(data)
+    to_log = data if isinstance(data, pd.DataFrame) else pd.DataFrame(data)
     if os.path.isfile(path):
-        current_log = DDF.from_csv(path)
+        current_log = pd.read_csv(path)
         current_log = current_log.append(to_log, axis=0)
     else:
         current_log = to_log

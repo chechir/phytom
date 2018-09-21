@@ -19,6 +19,6 @@ class LGBRModel():
         self._model.fit(mm.values, targets, *args, **kwargs)
 
     def predict(self, mm, *args, **kwargs):
-        mm = mm.colslice(self.mm_columns)
+        mm = mm[self.mm_columns]
         predictions = self._model.predict(mm.values, *args, **kwargs)
         return predictions

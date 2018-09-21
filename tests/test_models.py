@@ -1,10 +1,11 @@
-from wutils.ddf import DDF
 import numpy as np
+import pandas as pd
+
 from wutils.models import LGBRModel
 
 
 def test_LGBRmodel():
-    df = DDF({
+    df = pd.DataFrame({
         'MoSold': [2., 2., 9.]*100,
         'feat2': [1., 2., 1.]*100,
         })
@@ -16,7 +17,7 @@ def test_LGBRmodel():
 
 
 def test_LGBRmodel_with_early_stopping():
-    df = DDF({
+    df = pd.DataFrame({
         'MoSold': [2., 2., 9.]*100,
         'feat2': [1., 2., 1.]*100,
         })
