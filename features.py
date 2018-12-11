@@ -1,4 +1,8 @@
+# pylint: disable=missing-docstring
+# pylint: disable=invalid-name
+
 import numpy as np
+from wutils.np import get_group_ixs
 
 
 def categorical_to_numeric(df, column):
@@ -17,3 +21,12 @@ def categorical_to_numeric(df, column):
     result = map(text_to_numeric, df[column])
     result = np.log(np.array(result))
     return result
+
+
+def categorical_to_frequency(df, column):
+    ixs = get_group_ixs(df[column].values)
+    res = np.zeros(len(df))
+    for ix in ixs.values():
+        res[ix] = len(ix)
+    return res
+
