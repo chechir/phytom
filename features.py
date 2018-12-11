@@ -28,5 +28,4 @@ def categorical_to_frequency(df, column):
     res = np.zeros(len(df))
     for ix in ixs.values():
         res[ix] = len(ix)
-    return res
-
+    return res.astype(np.int64)
