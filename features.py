@@ -54,3 +54,19 @@ def lagged_decay(ordered_values, decay=1):
         historic_score = current_score
     return result
 
+
+def days_to_first_event(df, groupby, time_col):
+    dates = df[time_col].astype('datetime64[ns]')
+    ids = df[groupby].values
+    result = wnp.group_apply(dates, ids, _time_to_min_date)
+    result = _convert_ns_to_days(result)
+    return result
+
+
+def _time_to_min_date(v):
+    min_date = np.min(v)
+    return v - min_date
+
+
+def _convert_ns_to_days(values):
+    return (((values/1000000000)/60)/60)/24
