@@ -33,7 +33,7 @@ def categorical_to_frequency(df, column):
     return res.astype(np.int64)
 
 
-def grouped_lagged_decay(df, groupby, col, fillna=-1, decay=1):
+def grouped_lagged_decay(df, groupby, col, fillna=0, decay=1):
     """ Grouped lagged decay """
     values = wnp.fillna(df[col].values, 0)
     f = partial(lagged_decay, decay=decay)
