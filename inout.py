@@ -1,7 +1,7 @@
 import os
 import json
+import pickle
 import pandas as pd
-import _pickle as cPickle
 
 
 def append_csv(data, path):
@@ -31,13 +31,13 @@ def ensure_dir_exists(path):
 
 def read_pickle(path):
     with open(path, "rb") as f:
-        obj = cPickle.load(f)
+        obj = pickle.load(f)
     return obj
 
 
 def write_pickle(obj, path):
     with open(path, "wb") as f:
-        cPickle.dump(obj, f, protocol=cPickle.HIGHEST_PROTOCOL)
+        pickle.dump(obj, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def write_json(obj, path, encoder=None):
@@ -63,7 +63,8 @@ def read_json_per_line(path):
 
 
 def write_json_per_line(list_of_data, path):
-    """ Each element in list_of_data will be written to path as a json on its own line. """
+    """ Each element in list_of_data will be written
+        to path as a json on its own line. """
     ensure_dir_exists(path)
     assert isinstance(list_of_data, list), "data must be list"
     with open(path, "a") as f:
