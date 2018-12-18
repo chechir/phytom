@@ -6,6 +6,7 @@ from wutils.features import (
     categorical_to_frequency,
     grouped_lagged_decay,
     days_to_first_event,
+    grouped_days_since_result,
 )
 
 
@@ -57,4 +58,21 @@ def test_datys_to_first_event():
     })
     result = days_to_first_event(df, 'horse_name', 'scheduled_time')
     expected = [0, 1, 11]
+    assert np.allclose(expected, result)
+
+
+def test_grouped_days_since_result():
+    df = pd.DataFrame({
+        'runner_id': np.array([1, 1, 1, 1, 1, 2, 2, 2, 2, 2]),
+        'win_flag': np.array([1, 0, 1, 0, 0,
+                              1, 0, 1, 0, 0]),
+        'scheduled_time': np.array(
+            ['2004-01-01', '2004-01-02', '2004-01-03', '2004-01-04', '2004-01-06',
+             '2004-01-01', '2004-01-02', '2004-01-03', '2004-01-04', '2004-01-06']
+            ).astype('datetime64[ms]'),
+        })
+    expected = [-1, 1, 2, 1, 3,
+                -1, 1, 2, 1, 3]
+    # result = features.days_to_previous_result(df, col='win_flag', value=1)
+    result = grouped_days_since_result(df, groupby='runner_id', col='win_flag')
     assert np.allclose(expected, result)

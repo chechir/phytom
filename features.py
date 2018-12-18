@@ -1,4 +1,5 @@
 # pylint: disable=invalid-name
+import copy
 from functools import partial
 import numpy as np
 
@@ -73,3 +74,27 @@ def _time_to_min_date(v):
 
 def _convert_ns_to_days(values):
     return (((values/1000000000)/60)/60)/24
+
+
+def grouped_days_since_result(df, groupby, col='win_flag', value=1, fillna=-1):
+    func = partial(days_since_result, value=1)
+    result = wnp.group_apply(
+        df[[col, 'scheduled_time']].values,
+        df[groupby].values, func, multiarg=True)
+    result = wnp.fillna(result, fillna)
+    return result
+
+
+def days_since_result(v, dates, value=1):
+    dates = dates.astype('datetime64[ms]')
+    date_of_last_win = copy.deepcopy(dates)
+    win_ix = (v == value)
+    date_of_last_win[~win_ix] = np.datetime64('NaT')
+    # just to shift: shove a nat to start, drop the last value
+    date_of_last_win = np.r_[np.datetime64('NaT'), date_of_last_win[:-1]]
+    date_of_last_win = wnp.ffill(date_of_last_win)
+    diffs = (dates - date_of_last_win).astype('timedelta64[D]')
+    nan_ix = wnp.isnull(diffs)
+    diffs = diffs.astype(float)
+    diffs[nan_ix] = np.nan
+    return diffs
