@@ -26,7 +26,7 @@ def test_grouped_lagged_decay():
 
     result = grouped_lagged_decay(df, 'horse_name', 'win_flag')
     expected = [
-        -1, 1,
+        0, 1,
         (0 + 1*np.e**-1),
         (1 + 0*np.e**-1 + 1*np.e**-2)
     ]
@@ -41,7 +41,7 @@ def test_grouped_lagged_decay_with_nans():
 
     result = grouped_lagged_decay(df, 'horse_name', 'win_flag')
     expected = [
-        -1, 1,
+        0, 1,
         (0 + 1*np.e**-1),
         (0 + 0*np.e**-1 + 1*np.e**-2)
     ]
