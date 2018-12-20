@@ -100,3 +100,64 @@ def days_since_result(v, dates, value=1):
     diffs = diffs.astype(float)
     diffs[nan_ix] = np.nan
     return diffs
+
+# def grouped_lagged_ema(df, calc_colname, alpha, groupby):
+#     v = df[calc_colname]
+#     func = partial(lagged_ema, alpha=alpha)
+#     result = wnp.group_apply(v, df[groupby], func)
+#     return result
+# 
+# def grouped_lagged_dema(df, calc_colname, span, beta, groupby):
+#     v = df[calc_colname]
+#     func = partial(lagged_dema, span=span, beta=beta)
+#     result = ss.np.group_apply(v, df[groupby], func)
+#     return result
+#
+# def grouped_lagged_ema(df, calc_colname, alpha, groupby):
+#     # This is an improvement of pesky_quiz function
+#     func = partial(wg.lagged_ema, alpha=alpha)
+#     result = ss.np.group_apply(df[calc_colname], df[groupby], func)
+#     return result
+
+
+def grouped_ema(df, col, alpha, groupby):
+    v = df[col].values
+    func = partial(ema, alpha=alpha)
+    result = wnp.group_apply(v, df[groupby].values, func)
+    return result
+
+
+def ema(v, alpha=0.2):
+    result = np.nan * v
+    result[0] = v[0]
+    for i in range(1, len(v)):
+        result[i] = alpha * v[i] + (1 - alpha) * result[i-1]
+    return result
+
+
+def lagged_ema(v, alpha):
+    emas = ema(v, alpha)
+    emas = wnp.lag(emas, init=0)
+    return emas
+
+
+def dema(v, span, beta):
+    """ needs test """
+    intercept = v * np.nan
+    slope = v * np.nan
+    intercept[0] = v[0]
+    slope[0] = 0
+    alpha = 2.0 / (1 + span)
+    for i in range(1, len(v)):
+        intercept[i] = alpha * v[i] + (1 - alpha) * (intercept[i-1] + slope[i-1])
+        slope[i] = (beta * (intercept[i] - intercept[i-1]) + (1 - beta) * slope[i-1])
+    return intercept
+
+
+def lagged_dema(v, span, beta):
+    """ needs test """
+    demas = dema(v, span, beta)
+    demas = wnp.lag(demas, init=0)
+    return demas
+
+

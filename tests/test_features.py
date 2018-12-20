@@ -7,6 +7,8 @@ from wutils.features import (
     grouped_lagged_decay,
     days_to_first_event,
     grouped_days_since_result,
+    ema,
+    grouped_ema,
 )
 
 
@@ -76,3 +78,20 @@ def test_grouped_days_since_result():
     # result = features.days_to_previous_result(df, col='win_flag', value=1)
     result = grouped_days_since_result(df, groupby='runner_id', col='win_flag')
     assert np.allclose(expected, result)
+
+
+def test_ema():
+    array = np.array([5, 10, 1, 0, 0])
+    assert np.allclose(array, ema(array, alpha=1))
+    expected = [5., 7.5, 4.25, 2.125, 1.0625]
+    assert np.allclose(expected, ema(array, alpha=0.5))
+
+
+def test_grouped_ema():
+    df = pd.DataFrame({
+        'group': np.array([1, 1, 1, 1, 1, 2, 2, 2, 2, 2]),
+        'price': np.array([5, 10, 1, 0, 0]*2),
+        })
+    assert np.allclose(df['price'], grouped_ema(df, 'price', 1, 'group'))
+    expected = [5., 7.5, 4.25, 2.125, 1.0625] * 2
+    assert np.allclose(expected, grouped_ema(df, 'price', .5, 'group'))
