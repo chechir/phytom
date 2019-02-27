@@ -2,17 +2,19 @@ import os
 import json
 import pickle
 import pandas as pd
+import numpy as np
 
 
 def append_csv(data, path):
+    """ append to a csv """
     assert path.endswith(".csv")
     to_log = data if isinstance(data, pd.DataFrame) else pd.DataFrame(data)
     if os.path.isfile(path):
         current_log = pd.read_csv(path)
-        current_log = current_log.append(to_log, axis=0)
+        current_log = current_log.append(to_log, ignore_index=True, sort=True)
     else:
         current_log = to_log
-    current_log.to_csv(path)
+    current_log.to_csv(path, index=False)
 
 
 def ensure_dir_exists(path):
@@ -67,7 +69,7 @@ def write_json_per_line(list_of_data, path):
         to path as a json on its own line. """
     ensure_dir_exists(path)
     assert isinstance(list_of_data, list), "data must be list"
-    with open(path, "a") as f:
+    with open(path, "a") as fhandler:
         for row in list_of_data:
-            json_formatted_data = json.dumps(row, cls=NumpyEncoder)
-            f.write(json_formatted_data + "\n")
+            json_formatted_data = json.dumps(row, cls=json.JSONEncoder)
+            fhandler.write(json_formatted_data + "\n")
