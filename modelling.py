@@ -2,11 +2,27 @@ from collections import OrderedDict
 import copy
 import numpy as np
 from wutils import inout as io
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, ks_2samp
 
 
 # pylint: disable=invalid-name
 # pylint: disable=missing-docstring
+
+def ks_feat_selection(train, test, threshold=0.05):
+    """ the 2 samples are assumed to be continuos """
+    pcol = []
+    pval = []
+    for col in train.columns:
+        pcol.append(col)
+        ks_result = ks_2samp(train[col].values, test[col].values)
+        pval.append(abs(ks_result.pvalue))
+    ixs = np.array(pval) > threshold
+    selected_feats = np.array(pcol)[ixs]
+    contrary = np.array(pcol)[~ixs]
+    print(list(zip(np.array(pval)[ixs], selected_feats))[:10])
+    print(list(zip(np.array(pval)[~ixs], contrary))[:10])
+    return selected_feats
+
 
 def pearsonr_feat_selection(df, target, threshold=0.05):
     pcol = []
