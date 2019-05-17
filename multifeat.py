@@ -18,10 +18,10 @@ def generate_features(df, features, helpers, n_jobs=4):
     feat_df = manager.generate_features(df, features, helpers)
     return feat_df
 
+
 class _FeatureGenerator(object):
     feature_prefix = FEATURE_PREFIX
     namer = lambda self, func: wu.strings.as_string(func)
-
 
     def generate_features(self, df, features, helpers):
         df = df.copy(deep=False)
@@ -31,9 +31,9 @@ class _FeatureGenerator(object):
         feat_df = pd.concat([feat_df, helper_df], axis=1)
         return feat_df
 
-
     def _log_func(self, func):
         logger = logging.getLogger(__name__)
+
         def wrapped_func(*args, **kwargs):
             start = time.time()
             logger.debug('Adding {}')
@@ -45,10 +45,8 @@ class _FeatureGenerator(object):
             return results
         return wrapped_func
 
-
     def _postprocess_features(self, values):
         return values.astype('float32')
-
 
     def _generate_helpers(self, df, helpers):
         helper_df = pd.DataFrame()
@@ -62,7 +60,6 @@ class _FeatureGenerator(object):
                 name = func_name if name is None else name
                 helper_df[name] = values
         return helper_df
-
 
     def _sanitise(self, result):
         if isinstance(result, np.ndarray):
@@ -82,6 +79,7 @@ class _FeatureGenerator(object):
     def __repr__(self):
         return type(self).__name__
 
+
 class SeriallyAddFeaturesMixin(object):
     def _generate_features(self, df, features):
         feat_df = pd.DataFrame()
@@ -100,6 +98,7 @@ class SeriallyAddFeaturesMixin(object):
                 df[feat_name] = value
                 feat_df[feat_name] = value
         return feat_df
+
 
 class ParallelAddFeaturesMixin(object):
     def __init__(self, n_jobs):
@@ -169,8 +168,10 @@ class ParallelAddFeaturesMixin(object):
             features['feat:' + name] = self._postprocess_features(values)
         return features
 
+
 class SerialFeatureGenerator(_FeatureGenerator, SeriallyAddFeaturesMixin):
     pass
+
 
 class ParallelFeatureGenerator(_FeatureGenerator, ParallelAddFeaturesMixin):
     pass
