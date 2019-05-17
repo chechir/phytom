@@ -1,12 +1,27 @@
-from collections import OrderedDict
-import copy
-import numpy as np
-from wutils import inout as io
+""" general function to help with modelling (feature selection, ixs,
+    dimensionality reduction
+"""
 from scipy.stats import pearsonr, ks_2samp
+from sklearn.decomposition import TruncatedSVD
+
+import numpy as np
+import pandas as pd
 
 
 # pylint: disable=invalid-name
 # pylint: disable=missing-docstring
+
+
+def apply_svd(df, test=None, n_components=20, n_iter=5):
+    svd = TruncatedSVD(
+        n_components=n_components, n_iter=n_iter, random_state=1)
+    svd.fit(df)
+    train = pd.DataFrame(svd.transform(df))
+    if isinstance(test, pd.DataFrame):
+        return train, pd.DataFrame(svd.transform(test))
+
+    return train
+
 
 def ks_feat_selection(train, test, threshold=0.05):
     """ the 2 samples are assumed to be continuos """

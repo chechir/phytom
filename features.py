@@ -106,7 +106,7 @@ def days_since_result(v, dates, value=1):
 #     func = partial(lagged_ema, alpha=alpha)
 #     result = wnp.group_apply(v, df[groupby], func)
 #     return result
-# 
+#
 # def grouped_lagged_dema(df, calc_colname, span, beta, groupby):
 #     v = df[calc_colname]
 #     func = partial(lagged_dema, span=span, beta=beta)
@@ -159,5 +159,3 @@ def lagged_dema(v, span, beta):
     demas = dema(v, span, beta)
     demas = wnp.lag(demas, init=0)
     return demas
-
-
