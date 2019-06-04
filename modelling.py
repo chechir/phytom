@@ -6,6 +6,7 @@ from sklearn.decomposition import TruncatedSVD
 
 import numpy as np
 import pandas as pd
+from scipy.stats import rankdata
 
 
 # pylint: disable=invalid-name
@@ -13,8 +14,7 @@ import pandas as pd
 
 
 def apply_svd(df, test=None, n_components=20, n_iter=5):
-    svd = TruncatedSVD(
-        n_components=n_components, n_iter=n_iter, random_state=1)
+    svd = TruncatedSVD(n_components=n_components, n_iter=n_iter, random_state=1)
     svd.fit(df)
     train = pd.DataFrame(svd.transform(df))
     if isinstance(test, pd.DataFrame):
@@ -23,8 +23,15 @@ def apply_svd(df, test=None, n_components=20, n_iter=5):
     return train
 
 
-def ks_feat_selection(train, test, threshold=0.05):
-    """ the 2 samples are assumed to be continuos """
+def ks_feat_selection(
+    train, test, threshold=0.05, return_pvals=False, alternative="two-sided"
+):
+    """ the 2 samples are assumed to be continuos
+        p-value is high,
+        then we cannot reject the hypothesis that the distributions of the
+        two samples are the same.
+        so, high p-value = feature good
+    """
     pcol = []
     pval = []
     for col in train.columns:
@@ -33,13 +40,12 @@ def ks_feat_selection(train, test, threshold=0.05):
         pval.append(abs(ks_result.pvalue))
     ixs = np.array(pval) > threshold
     selected_feats = np.array(pcol)[ixs]
-    contrary = np.array(pcol)[~ixs]
-    print(list(zip(np.array(pval)[ixs], selected_feats))[:10])
-    print(list(zip(np.array(pval)[~ixs], contrary))[:10])
+    if return_pvals:
+        return selected_feats, pval
     return selected_feats
 
 
-def pearsonr_feat_selection(df, target, threshold=0.05):
+def pearsonr_feat_selection(df, target, threshold=0.05, return_pvals=False):
     pcol = []
     pcor = []
     pval = []
@@ -49,6 +55,8 @@ def pearsonr_feat_selection(df, target, threshold=0.05):
         pcor.append(abs(pearsonr_result[0]))
         pval.append(abs(pearsonr_result[1]))
     selected_feats = np.array(pcol)[np.array(pval) < threshold]
+    if return_pvals:
+        return selected_feats, pval
     return selected_feats
 
 
@@ -58,12 +66,31 @@ def get_consecutive_fold_ixs(df, n_fold=6):
     """
     n = len(df)
     result = []
-    fold_length = n/n_fold
+    fold_length = int(n / n_fold)
     for i in range(n_fold):
         fold = i + 1
-        val_ixs = np.array(range(int(i*fold_length), int(fold_length) * fold))
+        val_ixs = np.array(range(int(i * fold_length), int(fold_length) * fold))
         train_ixs = np.array(list(set(range(0, n)) - set(val_ixs)))
         assert len(val_ixs) == fold_length
-        assert len(train_ixs) == fold_length * (n_fold-1)
+        assert len(train_ixs) == fold_length * (n_fold - 1)
         result.append([fold, (train_ixs, val_ixs)])
     return result
+
+
+def ensemble_predictions(predictions, weights, type_="linear"):
+    assert np.isclose(np.sum(weights), 1.0)
+    if type_ == "linear":
+        res = np.average(predictions, weights=weights, axis=0)
+    elif type_ == "harmonic":
+        res = np.average([1 / p for p in predictions], weights=weights, axis=0)
+        return 1 / res
+    elif type_ == "geometric":
+        numerator = np.average(
+            [np.log(p) for p in predictions], weights=weights, axis=0
+        )
+        res = np.exp(numerator / sum(weights))
+        return res
+    elif type_ == "rank":
+        res = np.average([rankdata(p) for p in predictions], weights=weights, axis=0)
+        return res / (len(res) + 1)
+    return res
