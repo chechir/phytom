@@ -24,8 +24,8 @@ def reduce_mem_usage(df, verbose=True):
                     c_min > np.finfo(np.float16).min
                     and c_max < np.finfo(np.float16).max
                 ):
-                    df[col] = df[col].astype(np.float16)
-                elif (
+                    df[col] = df[col].astype(np.float32)
+                if (
                     c_min > np.finfo(np.float32).min
                     and c_max < np.finfo(np.float32).max
                 ):
