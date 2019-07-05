@@ -159,7 +159,7 @@ def _convert_int_indices_to_bool_indices_if_necessary(ixs, kwargs):
     bools = kwargs.get("bools", False)
     if bools:
         length = np.sum([len(v) for v in ixs.values()])
-        ix_to_bool = lambda v, length: ss.np.ix_to_bool(v, length)
+        ix_to_bool = lambda v, length: np.ix_to_bool(v, length)
         ixs = {k: ix_to_bool(v, length) for k, v in ixs.items()}
     return ixs
 

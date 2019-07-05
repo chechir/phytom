@@ -77,6 +77,19 @@ def get_consecutive_fold_ixs(df, n_fold=6):
     return result
 
 
+def get_id_fold_ixs(ids, n_fold=5):
+    result = []
+    df = pd.DataFrame({"ids": ids})
+    df_unique = pd.DataFrame({"ids": np.unique(ids)})
+    df_unique['fold_id'] = np.random.randint(0, n_fold, len(df_unique))
+    df = df.merge(df_unique, on="ids", how="inner")
+    for i in range(n_fold):
+        val_ixs = np.where(df['fold_id'] == i)
+        train_ixs = np.where(df['fold_id'] != i)
+        result.append([train_ixs, val_ixs])
+    return result
+
+
 def ensemble_predictions(predictions, weights, type_="linear"):
     assert np.isclose(np.sum(weights), 1.0)
     if type_ == "linear":
