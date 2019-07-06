@@ -77,15 +77,17 @@ def get_consecutive_fold_ixs(df, n_fold=6):
     return result
 
 
-def get_id_fold_ixs(ids, n_fold=5):
+def get_id_fold_ixs(ids, n_fold=5, seed=None):
+    if seed:
+        np.random.seed(seed)
     result = []
     df = pd.DataFrame({"ids": ids})
     df_unique = pd.DataFrame({"ids": np.unique(ids)})
     df_unique['fold_id'] = np.random.randint(0, n_fold, len(df_unique))
     df = df.merge(df_unique, on="ids", how="inner")
     for i in range(n_fold):
-        val_ixs = np.where(df['fold_id'] == i)
-        train_ixs = np.where(df['fold_id'] != i)
+        val_ixs = np.where(df['fold_id'] == i)[0]
+        train_ixs = np.where(df['fold_id'] != i)[0]
         result.append([train_ixs, val_ixs])
     return result
 
