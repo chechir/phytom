@@ -1,8 +1,32 @@
+""" Set of tools to help with vectorial calculations and cleaning """
+import copy
+from collections import defaultdict, OrderedDict
+
 import numpy as np
 import pandas as pd
 import numexpr
-import copy
-from collections import defaultdict, OrderedDict
+
+# pylint: disable=missing-docstring
+
+
+def moving_average(array, window, center=False):
+    """ may be not the fastest option for long arrays """
+    return (
+        pd.DataFrame(array)
+        .rolling(window, center=center, min_periods=1)
+        .mean()
+        .values
+    )
+
+
+def moving_median(array, window, center=False):
+    """ may be not the fastest option for long arrays """
+    return (
+        pd.DataFrame(array)
+        .rolling(window, center=center, min_periods=1)
+        .median()
+        .values
+    )
 
 
 def fillna(array, na_value):
@@ -277,8 +301,8 @@ def lag(v, init, shift=1):
     return w
 
 
-def lagged_cumsum(v, init):
-    return lag(np.cumsum(v, axis=0), init)
+def lagged_cumsum(v, init, shift=1):
+    return lag(np.cumsum(v, axis=0), init, shift=shift)
 
 
 def rank(array):
@@ -299,9 +323,9 @@ def rolling_mean(v, window):
     cumsums = np.cumsum(v)
     length = len(v)
     if length <= window:
-        out = 1. * cumsums / (np.arange(length) + 1)
+        out = 1.0 * cumsums / (np.arange(length) + 1)
     else:
-        out[:window] = 1. * cumsums[:window] / (np.arange(window) + 1)
+        out[:window] = 1.0 * cumsums[:window] / (np.arange(window) + 1)
         out[window:] = (cumsums[window:] - cumsums[: length - window]) / window
     return out
 

@@ -1,24 +1,16 @@
+# pylint: disable=missing-docstring
 import numpy as np
 import pandas as pd
 import pytest
 
 from wutils import np as utils_np
 
-# pylint: disable=missing-docstring
 
-
-def test_get_str_columns():
-    df = pd.DataFrame({
-        'MSZoning': ['FV'],
-        'MiscFeature': [np.nan],
-        'MoSold': [2]
-        })
-    result = utils_np.get_str_columns(df)
-    for col in result:
-        assert col in ['MSZoning', 'MiscFeature']
-
-
-# pylint: disable=missing-docstring
+def test_moving_average():
+    array = np.arange(100)
+    result = utils_np.moving_average(array, 10)
+    assert np.allclose(result[-1:], (94.5))
+    assert len(result) == len(array)
 
 
 def test_get_str_columns():
@@ -42,7 +34,7 @@ losses = [utils_np.bin_ent, utils_np.abs_loss, utils_np.sq_loss]
 
 @pytest.mark.parametrize("loss", losses)
 def test_losses_raise_with_wrong_shapes(loss):
-    predictions = 1. / np.arange(2, 12).reshape((-1, 1))
+    predictions = 1.0 / np.arange(2, 12).reshape((-1, 1))
     bad_flags = np.array([0] * 5 + [1] * 5)
 
     with pytest.raises(AssertionError):
@@ -84,7 +76,7 @@ def test_loss_regression():
         (utils_np.sq_loss, 0.44182775042217681),
     ]
     for loss, expected_value in test_data:
-        predictions = 1. / np.arange(2, 12).reshape((-1, 1))
+        predictions = 1.0 / np.arange(2, 12).reshape((-1, 1))
         good_flags = np.array([0] * 5 + [1] * 5).reshape((-1, 1))
         loss_value = np.mean(loss(good_flags, predictions))
         assert np.isclose(loss_value, expected_value)
@@ -179,14 +171,14 @@ def test_vector_group_apply_works_with_3dims():
 
 def test_lag_func():
     values = np.array([1, 1, 2, 2, 3, 3])
-    expected = np.array([np.nan, 1., 1., 2., 2., 3.])
+    expected = np.array([np.nan, 1.0, 1.0, 2.0, 2.0, 3.0])
     output = utils_np.lag(values, np.nan)
     assert all(utils_np.nan_equality(expected, output))
 
 
 def test_lag_func_with_shift():
     values = np.array([1, 1, 2, 2, 3, 3])
-    expected = np.array([999, 999, 999, 1., 1., 2.])
+    expected = np.array([999, 999, 999, 1.0, 1.0, 2.0])
     output = utils_np.lag(values, 999, shift=3)
     assert all(utils_np.nan_equality(expected, output))
 
