@@ -1,6 +1,7 @@
 """ general function to help with modelling (feature selection, ixs,
     dimensionality reduction
 """
+from collections import OrderedDict
 from scipy.stats import pearsonr, ks_2samp
 from sklearn.decomposition import TruncatedSVD
 
@@ -11,6 +12,47 @@ from scipy.stats import rankdata
 
 # pylint: disable=invalid-name
 # pylint: disable=missing-docstring
+
+
+def get_time_series_cv_ixs(date, folds=10, start=0.5, stop=1):
+    """
+    The only way to do legit non-snoopy cross-fold validation - out-of-sample
+    examples are always in the future.
+    """
+    if isinstance(start, float):
+        assert (0 <= start) and (start <= 1)
+        assert (start <= stop) and (stop <= 1)
+    else:
+        start_cutoff = np.array([start], dtype=date[0].dtype)
+        stop_cutoff = np.array([stop], dtype=date[0].dtype)
+        start = np.mean(date < start_cutoff)
+        stop = np.mean(date < stop_cutoff)
+    return _get_time_series_cv_ixs(date, folds, start, stop)
+
+
+def _get_time_series_cv_ixs(date, folds, start, stop):
+    assert np.all(date == sorted(date)), "df must be in chronological order"
+
+    ixs = OrderedDict()
+    chunk_size = (stop - start) / folds
+
+    N = np.arange(len(date))
+    for fold in range(folds):
+        ix0 = int(np.percentile(N, (start + chunk_size * fold)) * 100)
+        ix1 = int(np.percentile(N, (start + chunk_size * (fold + 1)) * 100))
+
+        start_date = date[ix0]
+        end_date = date[ix1]
+        assert start_date < end_date, "end_date must be after start date"
+
+        train_ix = date <= start_date
+        test_ix = (date > start_date) & (date <= end_date)
+        assert (
+            train_ix.astype("float") + test_ix.astype("float")
+        ).max() < 2, "There cannot be overlap between test and train ix"
+
+        ixs[fold] = {"train": train_ix, "val": test_ix}
+    return ixs
 
 
 def apply_svd(df, test=None, n_components=20, n_iter=5):
@@ -83,11 +125,11 @@ def get_id_fold_ixs(ids, n_fold=5, seed=None):
     result = []
     df = pd.DataFrame({"ids": ids})
     df_unique = pd.DataFrame({"ids": np.unique(ids)})
-    df_unique['fold_id'] = np.random.randint(0, n_fold, len(df_unique))
+    df_unique["fold_id"] = np.random.randint(0, n_fold, len(df_unique))
     df = df.merge(df_unique, on="ids", how="inner")
     for i in range(n_fold):
-        val_ixs = np.where(df['fold_id'] == i)[0]
-        train_ixs = np.where(df['fold_id'] != i)[0]
+        val_ixs = np.where(df["fold_id"] == i)[0]
+        train_ixs = np.where(df["fold_id"] != i)[0]
         result.append([train_ixs, val_ixs])
     return result
 

@@ -5,8 +5,10 @@ from collections import defaultdict, OrderedDict
 import numpy as np
 import pandas as pd
 import numexpr
+from numba import jit
 
 # pylint: disable=missing-docstring
+# pylint: disable=invalid-name
 
 
 def moving_average(array, window, center=False):
@@ -15,7 +17,8 @@ def moving_average(array, window, center=False):
         pd.DataFrame(array)
         .rolling(window, center=center, min_periods=1)
         .mean()
-        .values
+        .to_numpy()
+        .squeeze()
     )
 
 
@@ -26,9 +29,11 @@ def moving_median(array, window, center=False):
         .rolling(window, center=center, min_periods=1)
         .median()
         .values
+        .squeeze()
     )
 
 
+# @jit(nopython=True)
 def fillna(array, na_value):
     array = array.copy()
     ix = np.isnan(array) | np.isinf(array)
@@ -294,6 +299,7 @@ def is_null(*args, **kwargs):
 isnull = is_null
 
 
+# @jit(nopython=True)
 def lag(v, init, shift=1):
     w = np.nan * v
     w[0:shift] = init
