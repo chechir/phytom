@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+from matplotlib_venn import venn2
 from sklearn import linear_model, preprocessing
 import numpy as np
 
@@ -7,8 +8,7 @@ from wutils.np import rolling_mean
 
 def add_best_fit_curve(x, y, degree, fit_intercept, **kwargs):
     mm = make_polynomial_mm(x=x, degree=degree)
-    model = linear_model.LinearRegression(
-            n_jobs=-1, fit_intercept=fit_intercept)
+    model = linear_model.LinearRegression(n_jobs=-1, fit_intercept=fit_intercept)
     model.fit(X=mm, y=y)
     predictions = model.predict(X=mm)
 
@@ -34,3 +34,28 @@ def make_polynomial_mm(x, degree):
         x = x[:, np.newaxis]
     poly = preprocessing.PolynomialFeatures(degree=degree, include_bias=False)
     return poly.fit_transform(X=x)
+
+
+def plot_venn2_primary_secondary(elements_by_group, venn_values, ax):
+    """ Plot venn diagram of 2 groups
+    it needs the elements_by_group (all elements that belong to a group,
+    so if "element1" apears in A and B, it will apear in (A, b), (A, ), and (B, )
+    venn_values: same as interactions but only shows elements once
+    so if "element1" apears in A and B, it will apear only in (A, b)
+    """
+    A = elements_by_group[("primary",)]
+    B = elements_by_group[("backup",)]
+    v = venn2([A, B], ["backup", "primary"], ax=ax)
+
+    v.get_label_by_id("11").set_text(
+        "\n".join(np.array(list(venn_values[("backup", "primary")])).astype(str))
+    )
+    v.get_label_by_id("10").set_text(
+        "\n".join(np.array(list(venn_values[("primary",)])).astype(str))
+    )
+    v.get_label_by_id("01").set_text(
+        "\n".join(np.array(list(venn_values[("backup",)])).astype(str))
+    )
+    plt.show()
+
+    return v

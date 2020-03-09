@@ -5,10 +5,18 @@ from collections import defaultdict, OrderedDict
 import numpy as np
 import pandas as pd
 import numexpr
-from numba import jit
+# from numba import jit
 
 # pylint: disable=missing-docstring
 # pylint: disable=invalid-name
+
+
+def IQR(v):
+    """ Caclualtes intercuantile range (for Jason)"""
+    series = pd.Series(v)
+    q75 = series.quantile(0.75)
+    q25 = series.quantile(0.25)
+    return q75 - q25
 
 
 def moving_average(array, window, center=False):
