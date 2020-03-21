@@ -9,6 +9,8 @@ def append_csv(data, path):
     """ append to a csv """
     assert path.endswith(".csv")
     to_log = data if isinstance(data, pd.DataFrame) else pd.DataFrame(data)
+    if "~" in path:
+        print("Dont include the user path as ~!, use os.path.expanduser")
     if os.path.isfile(path):
         current_log = pd.read_csv(path)
         current_log = current_log.append(to_log, ignore_index=True, sort=True)
