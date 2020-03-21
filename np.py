@@ -19,11 +19,11 @@ def IQR(v):
     return q75 - q25
 
 
-def moving_average(array, window, center=False):
+def moving_average(array, window, center=False, min_periods=1):
     """ may be not the fastest option for long arrays """
     return (
         pd.DataFrame(array)
-        .rolling(window, center=center, min_periods=1)
+        .rolling(window, center=center, min_periods=min_periods)
         .mean()
         .to_numpy()
         .squeeze()
