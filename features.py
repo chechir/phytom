@@ -60,7 +60,7 @@ def lagged_decay(ordered_values, decay=1):
 
 def days_to_first_event(df, groupby, time_col):
     """ Calculate days to the first date for each group, in a Time series """
-    dates = df[time_col].astype('datetime64[ns]')
+    dates = df[time_col].astype('datetime64[ns]').values
     ids = df[groupby].values
     result = wnp.group_apply(dates, ids, _time_to_min_date)
     result = _convert_ns_to_days(result)
