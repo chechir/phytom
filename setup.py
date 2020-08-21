@@ -1,7 +1,7 @@
 from setuptools import find_packages, setup
 
 setup(
-    name="richa",
+    name="wutils",
     author="Matias Thayer",
     author_email="matias.thayer@gmail.com",
     url="https://github.com/chechir/wutils",
@@ -15,8 +15,8 @@ setup(
         # 'click>=7',
         "numexpr",
         "pandas",
-        "scikit-learn"
-        "scipy"
+        "scikit-learn",
+        "scipy",
         "numpy",
         # 'numpy>=1.19',
     ),
