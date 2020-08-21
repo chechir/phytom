@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 import pandas as pd
 
-from wutils.venn import (
+from doors.venn import (
     get_all_combinations,
     get_elements_for_each_combination,
     get_venn_values,

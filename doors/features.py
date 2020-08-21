@@ -3,7 +3,7 @@ import copy
 from functools import partial
 import numpy as np
 
-from wutils import np as wnp
+from doors import np as wnp
 
 
 def categorical_to_numeric(df, column):

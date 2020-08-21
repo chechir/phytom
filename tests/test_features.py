@@ -2,7 +2,7 @@
 # pylint: disable=invalid-name
 import pandas as pd
 import numpy as np
-from wutils.features import (
+from doors.features import (
     categorical_to_frequency,
     grouped_lagged_decay,
     days_to_first_event,

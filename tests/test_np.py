@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from wutils import np as utils_np
+from doors import np as utils_np
 
 
 def test_moving_average():

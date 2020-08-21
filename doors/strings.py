@@ -4,7 +4,7 @@ import unicodedata
 import re
 from string import punctuation as PUNCTUATIONS
 
-from wutils.dates import get_timestamp
+from doors.dates import get_timestamp
 
 SPECIAL_PUNCTUATIONS = PUNCTUATIONS.replace('_', '')
 

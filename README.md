@@ -1,3 +1,3 @@
-# wutils
+# doors
 
-These are common functions used in machine learnig and data analysis work
+These are common functions used in machine learning and data analysis work

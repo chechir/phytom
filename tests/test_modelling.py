@@ -3,7 +3,7 @@
 
 from collections import OrderedDict
 import numpy as np
-from wutils import modelling
+from doors import modelling
 
 
 def test_get_id_fold_ixs():
