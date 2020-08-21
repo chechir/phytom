@@ -1,9 +1,0 @@
-numexpr
-# lightgbm==2.2.3
-pandas
-scikit-learn
-scipy
-numpy
-pytest
-pdbpp
-numba
