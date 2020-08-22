@@ -1,10 +1,11 @@
 """ Set of tools to help with vectorial calculations and cleaning """
 import copy
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict, defaultdict
 
+import numexpr
 import numpy as np
 import pandas as pd
-import numexpr
+
 # from numba import jit
 
 # pylint: disable=missing-docstring
@@ -36,8 +37,7 @@ def moving_median(array, window, center=False):
         pd.DataFrame(array)
         .rolling(window, center=center, min_periods=1)
         .median()
-        .values
-        .squeeze()
+        .values.squeeze()
     )
 
 
@@ -73,21 +73,21 @@ def ix_to_bool(ix, length):
     return boolean_mask
 
 
-def concatenate(data, fillna=None):
+def concatenate(data, fill_na=None):
     all_keys = [d.keys() for d in data]
     flat_keys = [k for keys in all_keys for k in keys]
     keys = set(flat_keys)
     _data = {k: [] for k in keys}
     for row in data:
         for k in keys:
-            _data[k].append(row.get(k, fillna))
+            _data[k].append(row.get(k, fill_na))
     return _data
 
 
 def is_nptimedelta(v):
     try:
         answer = "timedelta" in v.dtype.name
-    except:
+    except:  # noqa E722
         answer = False
     return answer
 
@@ -183,8 +183,8 @@ def _ensure_group_ids_hashable(group_ids):
         combined_group_ids = group_ids[0]
     else:
         combined_group_ids = zip(*group_ids)
-    is_list_of_list = lambda ids: isinstance(ids[0], list)
-    is_matrix = lambda ids: isinstance(ids, np.ndarray) and ids.ndim == 2
+    is_list_of_list = lambda ids: isinstance(ids[0], list)  # noqa E731
+    is_matrix = lambda ids: isinstance(ids, np.ndarray) and ids.ndim == 2  # noqa E731
     if is_list_of_list(combined_group_ids) or is_matrix(combined_group_ids):
         hashable_group_ids = [tuple(group_id) for group_id in combined_group_ids]
     else:
@@ -196,7 +196,7 @@ def _convert_int_indices_to_bool_indices_if_necessary(ixs, kwargs):
     bools = kwargs.get("bools", False)
     if bools:
         length = np.sum([len(v) for v in ixs.values()])
-        ix_to_bool = lambda v, length: np.ix_to_bool(v, length)
+        ix_to_bool = lambda v, length: np.ix_to_bool(v, length)  # noqa E731
         ixs = {k: ix_to_bool(v, length) for k, v in ixs.items()}
     return ixs
 
@@ -245,7 +245,7 @@ def get_new_value_flags(values):
 def is_npdatetime(v):
     try:
         answer = "datetime" in v.dtype.name
-    except:
+    except:  # noqa E722
         answer = False
     return answer
 
@@ -320,7 +320,9 @@ def lagged_cumsum(v, init, shift=1):
 
 
 def rank(array):
-    """ Returns rank of element in an array, with greatest value having the greatest rank. Repeated values get different ranks.
+    """
+    Returns rank of element in an array, with greatest value having the greatest
+    rank. Repeated values get different ranks.
 
     Examples:
         [-10, 3, 0, 0] ==> [0, 3, 1, 2]
@@ -350,7 +352,7 @@ def get_rolling_std(v, window):
     cum_deviation = np.cumsum(deviation)
     diff = cum_deviation[window:] - cum_deviation[:-window]
     mean_diff = diff / window
-    for i in xrange(min(window, len(v))):
+    for i in range(min(window, len(v))):
         mean_diff = np.insert(mean_diff, i, cum_deviation[i] / (i + 1))
     return np.sqrt(mean_diff)
 
@@ -408,8 +410,3 @@ def _check_x_ent_inputs(predictions, flags):
         np.isclose(sum_preds, 1.0)
     ), "Predictions do not sum to one in probability space"
     assert sorted(np.unique(flags)) == [0.0, 1.0]
-
-
-flatten = lambda l: [item for sublist in l for item in sublist]
-
-ensure_is_list = lambda obj: obj if isinstance(obj, list) else [obj]

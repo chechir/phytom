@@ -1,7 +1,6 @@
 from collections import OrderedDict
 
 import pandas as pd
-
 from doors.venn import (
     get_all_combinations,
     get_elements_for_each_combination,
@@ -20,11 +19,7 @@ def test_get_venn_values():
         }
     )
     expected = OrderedDict(
-        [
-            (("primary", "secondary"), {1}),
-            (("primary",), {2}),
-            (("secondary",), {3})
-        ]
+        [(("primary", "secondary"), {1}), (("primary",), {2}), (("secondary",), {3})]
     )
     result = get_venn_values(df, "pair", "collect_id")
     assert dict(result) == dict(expected)

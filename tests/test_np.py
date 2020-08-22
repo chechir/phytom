@@ -3,7 +3,6 @@
 import numpy as np
 import pandas as pd
 import pytest
-
 from doors import np as utils_np
 
 

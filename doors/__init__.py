@@ -1,8 +1,1 @@
-from . import (
-        inout,
-        np,
-        paths,
-        features,
-        strings,
-        dates
-        )
+from . import dates, features, inout, np, paths, strings  # noqa: F401

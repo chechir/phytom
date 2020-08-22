@@ -2,13 +2,11 @@
     dimensionality reduction
 """
 from collections import OrderedDict
-from scipy.stats import pearsonr, ks_2samp
-from sklearn.decomposition import TruncatedSVD
 
 import numpy as np
 import pandas as pd
-from scipy.stats import rankdata
-
+from scipy.stats import ks_2samp, pearsonr, rankdata
+from sklearn.decomposition import TruncatedSVD
 
 # pylint: disable=invalid-name
 # pylint: disable=missing-docstring

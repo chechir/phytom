@@ -1,9 +1,8 @@
+import numpy as np
+from doors.np import rolling_mean
 from matplotlib import pyplot as plt
 from matplotlib_venn import venn2
 from sklearn import linear_model, preprocessing
-import numpy as np
-
-from doors.np import rolling_mean
 
 
 def add_best_fit_curve(x, y, degree, fit_intercept, **kwargs):

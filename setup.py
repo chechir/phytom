@@ -9,11 +9,5 @@ setup(
     license="MIT",
     setup_requires=["setuptools_scm"],
     packages=find_packages(exclude=["tests"]),
-    install_requires=(
-        "numexpr",
-        "pandas",
-        "scikit-learn",
-        "scipy",
-        "numpy",
-    ),
+    install_requires=("numexpr", "pandas", "scikit-learn", "scipy", "numpy",),
 )

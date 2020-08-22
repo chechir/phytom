@@ -1,6 +1,9 @@
 .pytest_cache/
 tests/.pytest_cache/
+tests/__pycache__/
+tests/.mypy_cache/
 __pycache__
+venv/
 *.pyc
 
 /.venv

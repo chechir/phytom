@@ -1,8 +1,8 @@
-import os
 import json
+import os
 import pickle
+
 import pandas as pd
-import numpy as np
 
 
 def append_csv(data, path):

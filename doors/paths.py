@@ -2,7 +2,7 @@ import os
 
 
 def dropbox():
-    path = os.path.expanduser('~/Dropbox/')
+    path = os.path.expanduser("~/Dropbox/")
     if not os.path.isdir(path):
-        path = '/Dropbox/'
+        path = "/Dropbox/"
     return path

@@ -1,12 +1,12 @@
-from multiprocessing import JoinableQueue, Manager, Process
 import logging
-import numpy as np
 import time
-import pandas as pd
+from multiprocessing import JoinableQueue, Manager, Process
 
 import doors as wu
+import numpy as np
+import pandas as pd
 
-FEATURE_PREFIX = 'feat:'
+FEATURE_PREFIX = "feat:"
 
 
 def generate_features(df, features, helpers, n_jobs=4):
@@ -21,7 +21,9 @@ def generate_features(df, features, helpers, n_jobs=4):
 
 class _FeatureGenerator(object):
     feature_prefix = FEATURE_PREFIX
-    namer = lambda self, func: wu.strings.as_string(func)
+
+    def namer(self, func):
+        return wu.strings.as_string(func)
 
     def generate_features(self, df, features, helpers):
         df = df.copy(deep=False)
@@ -36,24 +38,25 @@ class _FeatureGenerator(object):
 
         def wrapped_func(*args, **kwargs):
             start = time.time()
-            logger.debug('Adding {}')
+            logger.debug("Adding {}")
             name = wu.strings.as_string(func)
             results = func(*args, **kwargs)
             end = time.time()
             elapsed = end - start
-            logger.debug('Added {}: (time {})'.format(name, elapsed))
+            logger.debug("Added {}: (time {})".format(name, elapsed))
             return results
+
         return wrapped_func
 
     def _postprocess_features(self, values):
-        return values.astype('float32')
+        return values.astype("float32")
 
     def _generate_helpers(self, df, helpers):
         helper_df = pd.DataFrame()
         logger = logging.getLogger(__name__)
         for func in helpers:
             func_name = self.namer(func)
-            logger.debug('Adding helper: ' + func_name)
+            logger.debug("Adding helper: " + func_name)
             result = func(df)
             helpers = self._sanitise(result)
             for values, name in helpers:
@@ -86,14 +89,14 @@ class SeriallyAddFeaturesMixin(object):
         logger = logging.getLogger(__name__)
         for func in features:
             func_name = self.namer(func)
-            logger.debug('Adding features: ' + func_name)
+            logger.debug("Adding features: " + func_name)
             result = func(df)
             sanitised_results = self._sanitise(result)
             # if func_name == 'partial(func=raw_column, column=years_to_foaling_date)':
             #     import pdb;pdb.set_trace()
             for value, name in sanitised_results:
                 name = func_name if name is None else name
-                feat_name = 'feat:' + name
+                feat_name = "feat:" + name
                 value = self._postprocess_features(value)
                 df[feat_name] = value
                 feat_df[feat_name] = value
@@ -133,7 +136,9 @@ class ParallelAddFeaturesMixin(object):
                 self._queue.task_done()
                 break
             try:
-                self._logger.debug('[thread {}] feature: {}'.format(thread_id, self.namer(feat)))
+                self._logger.debug(
+                    "[thread {}] feature: {}".format(thread_id, self.namer(feat))
+                )
                 feature = self._get_feat_as_dict(df, feat)
                 return_dict.update(feature)
             except KeyError as e:
@@ -142,7 +147,7 @@ class ParallelAddFeaturesMixin(object):
 
     def _handle_missing_key(self, feat, return_dict, df, exception):
         missing_key = exception.args[0]
-        self._logger.debug('Missing key: {}; placing back in queue'.format(missing_key))
+        self._logger.debug("Missing key: {}; placing back in queue".format(missing_key))
         if missing_key in return_dict:
             df[missing_key] = return_dict[missing_key]
         self._queue.put(feat)
@@ -165,7 +170,7 @@ class ParallelAddFeaturesMixin(object):
         func_name = self.namer(feat)
         for values, name in sanitised:
             name = func_name if name is None else name
-            features['feat:' + name] = self._postprocess_features(values)
+            features["feat:" + name] = self._postprocess_features(values)
         return features
 
 
@@ -175,4 +180,3 @@ class SerialFeatureGenerator(_FeatureGenerator, SeriallyAddFeaturesMixin):
 
 class ParallelFeatureGenerator(_FeatureGenerator, ParallelAddFeaturesMixin):
     pass
-

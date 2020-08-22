@@ -1,13 +1,14 @@
 # pylint: disable=invalid-name
 import copy
 from functools import partial
-import numpy as np
 
+import numpy as np
 from doors import np as wnp
 
 
 def categorical_to_numeric(df, column):
     """ convert text column into numeric using the character codes """
+
     def char_to_numeric(char):
         return str(ord(char))
 
@@ -16,7 +17,7 @@ def categorical_to_numeric(df, column):
         text = text[:10]
         text = text.lower()
         numeric_chars = map(char_to_numeric, text)
-        result = ''.join(numeric_chars)
+        result = "".join(numeric_chars)
         result = float(result)
         return result
 
@@ -60,7 +61,7 @@ def lagged_decay(ordered_values, decay=1):
 
 def days_to_first_event(df, groupby, time_col):
     """ Calculate days to the first date for each group, in a Time series """
-    dates = df[time_col].astype('datetime64[ns]').values
+    dates = df[time_col].astype("datetime64[ns]").values
     ids = df[groupby].values
     result = wnp.group_apply(dates, ids, _time_to_min_date)
     result = _convert_ns_to_days(result)
@@ -73,33 +74,34 @@ def _time_to_min_date(v):
 
 
 def _convert_ns_to_days(values):
-    return (((values/1000000000)/60)/60)/24
+    return (((values / 1000000000) / 60) / 60) / 24
 
 
 def grouped_days_since_result(
-        df, groupby, col='win_flag',
-        value=1, fillna=-1, coldate='scheduled_time'):
+    df, groupby, col="win_flag", value=1, fillna=-1, coldate="scheduled_time"
+):
     func = partial(days_since_result, value=1)
     result = wnp.group_apply(
-        df[[col, coldate]].values,
-        df[groupby].values, func, multiarg=True)
+        df[[col, coldate]].values, df[groupby].values, func, multiarg=True
+    )
     result = wnp.fillna(result, fillna)
     return result
 
 
 def days_since_result(v, dates, value=1):
-    dates = dates.astype('datetime64[ms]')
+    dates = dates.astype("datetime64[ms]")
     date_of_last_win = copy.deepcopy(dates)
-    win_ix = (v >= value)
-    date_of_last_win[~win_ix] = np.datetime64('NaT')
+    win_ix = v >= value
+    date_of_last_win[~win_ix] = np.datetime64("NaT")
     # just to shift: shove a nat to start, drop the last value
-    date_of_last_win = np.r_[np.datetime64('NaT'), date_of_last_win[:-1]]
+    date_of_last_win = np.r_[np.datetime64("NaT"), date_of_last_win[:-1]]
     date_of_last_win = wnp.ffill(date_of_last_win)
-    diffs = (dates - date_of_last_win).astype('timedelta64[D]')
+    diffs = (dates - date_of_last_win).astype("timedelta64[D]")
     nan_ix = wnp.isnull(diffs)
     diffs = diffs.astype(float)
     diffs[nan_ix] = np.nan
     return diffs
+
 
 # def grouped_lagged_ema(df, calc_colname, alpha, groupby):
 #     v = df[calc_colname]
@@ -131,7 +133,7 @@ def ema(v, alpha=0.2):
     result = np.nan * v
     result[0] = v[0]
     for i in range(1, len(v)):
-        result[i] = alpha * v[i] + (1 - alpha) * result[i-1]
+        result[i] = alpha * v[i] + (1 - alpha) * result[i - 1]
     return result
 
 
@@ -149,8 +151,8 @@ def dema(v, span, beta):
     slope[0] = 0
     alpha = 2.0 / (1 + span)
     for i in range(1, len(v)):
-        intercept[i] = alpha * v[i] + (1 - alpha) * (intercept[i-1] + slope[i-1])
-        slope[i] = (beta * (intercept[i] - intercept[i-1]) + (1 - beta) * slope[i-1])
+        intercept[i] = alpha * v[i] + (1 - alpha) * (intercept[i - 1] + slope[i - 1])
+        slope[i] = beta * (intercept[i] - intercept[i - 1]) + (1 - beta) * slope[i - 1]
     return intercept
 
 
